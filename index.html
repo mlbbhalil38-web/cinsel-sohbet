@@ -1109,76 +1109,49 @@ function addMessageToScreen(
 async function sendMessage(){
 
   const input =
-    document.getElementById(
-      "messageInput"
-    );
-
+    document.getElementById("messageInput");
 
   const text =
     input.value.trim();
 
-
   if(!text){
-
     return;
   }
-
 
   if(!currentUsername){
-
-    alert(
-      "Önce sohbete giriş yap."
-    );
-
+    alert("Önce sohbete giriş yap.");
     return;
   }
 
+  /* Yazıyı kutudan hemen temizle */
+  input.value = "";
 
-  input.disabled =
-    true;
-
-
+  /* Supabase'e gönder */
   const result =
     await supabaseClient
       .from("messages")
-      .insert(
-        {
-          username:
-            currentUsername,
-
-          message:
-            text,
-
-          room:
-            currentRoom
-        }
-      );
-
-
-  input.disabled =
-    false;
-
+      .insert({
+        username: currentUsername,
+        message: text,
+        room: currentRoom
+      });
 
   if(result.error){
 
     console.error(
+      "Mesaj gönderme hatası:",
       result.error
     );
-
 
     alert(
       "Mesaj gönderilemedi."
     );
 
-    return;
+    /* Hata olursa yazıyı geri getir */
+    input.value = text;
   }
 
-
-  input.value = "";
-
 }
-
-
 
 /* =====================================
    ENTER
