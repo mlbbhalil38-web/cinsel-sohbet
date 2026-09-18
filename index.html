@@ -1,12 +1,24 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0"
+>
 
 <title>Cinsel Sohbet</title>
 
+
+<!-- SUPABASE -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
 <style>
+
 *{
   box-sizing:border-box;
   margin:0;
@@ -157,6 +169,12 @@ button{
   background:#1a2338;
   border-radius:9px;
   color:#cbd2e2;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.room:hover{
+  background:#252f48;
 }
 
 .room.active{
@@ -188,12 +206,19 @@ button{
   border-radius:10px;
   padding:10px;
   margin-bottom:10px;
+  word-break:break-word;
 }
 
 .message .name{
   color:#ff6d96;
   font-weight:bold;
   margin-bottom:4px;
+}
+
+.message .time{
+  color:#727d94;
+  font-size:11px;
+  margin-top:5px;
 }
 
 .chat-input{
@@ -229,9 +254,25 @@ button{
   color:white;
   border:1px solid #39445e;
   border-radius:8px;
+  width:100%;
+}
+
+.status{
+  text-align:center;
+  color:#ff6d96;
+  font-size:13px;
+  margin-top:10px;
+  min-height:18px;
+}
+
+.empty{
+  text-align:center;
+  color:#78839a;
+  padding:30px 10px;
 }
 
 @media(max-width:700px){
+
   .chat-layout{
     grid-template-columns:1fr;
   }
@@ -240,6 +281,7 @@ button{
     display:flex;
     gap:8px;
     overflow-x:auto;
+    padding:10px;
   }
 
   .rooms h3{
@@ -247,19 +289,34 @@ button{
   }
 
   .room{
-    min-width:120px;
+    min-width:110px;
     margin:0;
     text-align:center;
+  }
+
+  .online{
+    min-width:100px;
+    margin:auto 0;
+  }
+
+  .logout{
+    min-width:90px;
+    margin:0;
   }
 
   .chat-box{
     min-height:500px;
   }
+
 }
+
 </style>
+
 </head>
 
+
 <body>
+
 
 <header>
 
@@ -267,14 +324,19 @@ button{
     <span>♥</span> Cinsel Sohbet
   </div>
 
-  <button class="menu-btn">
+  <button
+    class="menu-btn"
+    onclick="alert('Menü yakında aktif olacak.')"
+  >
     ☰
   </button>
 
 </header>
 
 
+
 <div class="container">
+
 
   <section class="welcome">
 
@@ -287,9 +349,13 @@ button{
   </section>
 
 
+
   <!-- GİRİŞ -->
 
-  <section id="loginArea" class="login-box">
+  <section
+    id="loginArea"
+    class="login-box"
+  >
 
     <h2>Sohbete Katıl</h2>
 
@@ -300,6 +366,7 @@ button{
       type="text"
       maxlength="20"
       placeholder="Kullanıcı adın"
+      autocomplete="off"
     >
 
     <button
@@ -309,35 +376,84 @@ button{
       Sohbete Gir
     </button>
 
+    <div
+      id="loginStatus"
+      class="status"
+    ></div>
+
   </section>
+
 
 
   <!-- CHAT -->
 
-  <section id="chatArea" class="chat-area">
+  <section
+    id="chatArea"
+    class="chat-area"
+  >
 
     <div class="chat-layout">
 
+
+      <!-- ODALAR -->
 
       <div class="rooms">
 
         <h3>Odalar</h3>
 
-        <div class="room active">
-          Genel Sohbet
+
+        <div
+          class="room active"
+          data-room="sohbet"
+          onclick="changeRoom('sohbet', this)"
+        >
+          💬 Sohbet
         </div>
 
-        <div class="room">
-          Tanışma
+
+        <div
+          class="room"
+          data-room="Cinsellik"
+          onclick="changeRoom('Cinsellik', this)"
+        >
+          🔥 Cinsellik
         </div>
 
-        <div class="room">
-          Gece Sohbeti
+
+        <div
+          class="room"
+          data-room="şarkı"
+          onclick="changeRoom('şarkı', this)"
+        >
+          🎵 Şarkı
         </div>
+
+
+        <div
+          class="room"
+          data-room="oyun"
+          onclick="changeRoom('oyun', this)"
+        >
+          🎮 Oyun
+        </div>
+
+
+        <div
+          class="room"
+          data-room="yardım"
+          onclick="changeRoom('yardım', this)"
+        >
+          🆘 Yardım
+        </div>
+
 
         <div class="online">
-          🟢 Online: <span id="onlineCount">1</span>
+
+          🟢 Online:
+          <span id="onlineCount">0</span>
+
         </div>
+
 
         <button
           class="logout"
@@ -349,10 +465,17 @@ button{
       </div>
 
 
+
+      <!-- CHAT -->
+
       <div class="chat-box">
 
-        <div class="chat-header">
-          💬 Genel Sohbet
+
+        <div
+          id="chatHeader"
+          class="chat-header"
+        >
+          💬 Sohbet
         </div>
 
 
@@ -361,14 +484,8 @@ button{
           class="messages"
         >
 
-          <div class="message">
-
-            <div class="name">
-              Sistem
-            </div>
-
-            Sohbete hoş geldin! 👋
-
+          <div class="empty">
+            Mesajlar yükleniyor...
           </div>
 
         </div>
@@ -381,6 +498,7 @@ button{
             type="text"
             placeholder="Mesajını yaz..."
             maxlength="500"
+            autocomplete="off"
             onkeydown="handleEnter(event)"
           >
 
@@ -393,93 +511,508 @@ button{
 
         </div>
 
+
       </div>
+
 
     </div>
 
   </section>
 
+
 </div>
+
 
 
 <script>
 
+/* =====================================
+   SUPABASE AYARLARI
+===================================== */
+
+const SUPABASE_URL =
+  "https://nlmdbqadvmpsbhlnniwx.supabase.co";
+
+const SUPABASE_KEY =
+  "sb_publishable_Hmee-CUZQme2XLpTlRCrDw_eZnScubx";
+
+
+const supabaseClient =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+
+
+/* =====================================
+   DEĞİŞKENLER
+===================================== */
+
 let currentUsername = "";
 
+let currentRoom = "sohbet";
 
-/* =========================
+let realtimeChannel = null;
+
+let onlineInterval = null;
+
+
+
+/* =====================================
    GİRİŞ
-========================= */
+===================================== */
 
-function login(){
+async function login(){
 
   const input =
     document.getElementById("username");
 
+  const status =
+    document.getElementById("loginStatus");
+
   const username =
     input.value.trim();
 
+
   if(!username){
 
-    alert("Lütfen kullanıcı adı gir.");
+    status.textContent =
+      "Lütfen kullanıcı adı gir.";
 
     return;
   }
 
-  currentUsername =
-    username;
 
-  localStorage.setItem(
-    "username",
-    username
-  );
+  if(username.length < 2){
 
-  document.getElementById(
-    "loginArea"
-  ).style.display = "none";
+    status.textContent =
+      "Kullanıcı adı en az 2 karakter olmalı.";
 
-  document.getElementById(
-    "chatArea"
-  ).style.display = "block";
-
-}
+    return;
+  }
 
 
-/* =========================
-   ÇIKIŞ
-========================= */
-
-function logout(){
-
-  localStorage.removeItem(
-    "username"
-  );
-
-  currentUsername = "";
-
-  location.reload();
-
-}
+  status.textContent =
+    "Giriş yapılıyor...";
 
 
-/* =========================
-   MESAJ GÖNDER
-========================= */
+  try{
 
-function sendMessage(){
+    /* PROFİL OLUŞTUR */
 
-  const input =
-    document.getElementById(
-      "messageInput"
+    const profileResult =
+      await supabaseClient
+        .from("profiles")
+        .upsert(
+          {
+            username: username
+          },
+          {
+            onConflict: "username"
+          }
+        );
+
+
+    if(profileResult.error){
+
+      console.error(
+        profileResult.error
+      );
+
+    }
+
+
+    currentUsername =
+      username;
+
+
+    localStorage.setItem(
+      "username",
+      username
     );
 
-  const text =
-    input.value.trim();
 
-  if(!text){
+    document.getElementById(
+      "loginArea"
+    ).style.display = "none";
+
+
+    document.getElementById(
+      "chatArea"
+    ).style.display = "block";
+
+
+    await joinOnline();
+
+
+    await loadMessages();
+
+
+    subscribeRealtime();
+
+
+    startOnlineSystem();
+
+
+    status.textContent = "";
+
+
+  }catch(error){
+
+    console.error(error);
+
+    status.textContent =
+      "Giriş sırasında hata oluştu.";
+
+  }
+
+}
+
+
+
+/* =====================================
+   ONLINE KULLANICI
+===================================== */
+
+async function joinOnline(){
+
+  if(!currentUsername){
+    return;
+  }
+
+
+  const result =
+    await supabaseClient
+      .from("online_users")
+      .upsert(
+        {
+          username: currentUsername,
+          room: currentRoom,
+          created_at: new Date().toISOString()
+        },
+        {
+          onConflict: "username"
+        }
+      );
+
+
+  if(result.error){
+
+    console.error(
+      "Online kullanıcı hatası:",
+      result.error
+    );
+
+  }
+
+
+  await loadOnlineUsers();
+
+}
+
+
+
+/* =====================================
+   ONLINE SİSTEMİ
+===================================== */
+
+function startOnlineSystem(){
+
+  if(onlineInterval){
+
+    clearInterval(
+      onlineInterval
+    );
+
+  }
+
+
+  onlineInterval =
+    setInterval(
+      async function(){
+
+        if(!currentUsername){
+          return;
+        }
+
+
+        await supabaseClient
+          .from("online_users")
+          .upsert(
+            {
+              username: currentUsername,
+              room: currentRoom,
+              created_at:
+                new Date().toISOString()
+            },
+            {
+              onConflict: "username"
+            }
+          );
+
+
+        await cleanOldUsers();
+
+
+        await loadOnlineUsers();
+
+      },
+      60000
+    );
+
+}
+
+
+
+/* =====================================
+   ESKİ ONLINE KULLANICILARI TEMİZLE
+===================================== */
+
+async function cleanOldUsers(){
+
+  const oldTime =
+    new Date(
+      Date.now() - 5 * 60 * 1000
+    ).toISOString();
+
+
+  const result =
+    await supabaseClient
+      .from("online_users")
+      .delete()
+      .lt(
+        "created_at",
+        oldTime
+      );
+
+
+  if(result.error){
+
+    console.error(
+      result.error
+    );
+
+  }
+
+}
+
+
+
+/* =====================================
+   ONLINE SAYISI
+===================================== */
+
+async function loadOnlineUsers(){
+
+  const result =
+    await supabaseClient
+      .from("online_users")
+      .select(
+        "username",
+        {
+          count: "exact"
+        }
+      );
+
+
+  if(result.error){
+
+    console.error(
+      result.error
+    );
 
     return;
   }
+
+
+  document.getElementById(
+    "onlineCount"
+  ).textContent =
+    result.count || 0;
+
+}
+
+
+
+/* =====================================
+   ODA DEĞİŞTİR
+===================================== */
+
+async function changeRoom(
+  room,
+  element
+){
+
+  currentRoom =
+    room;
+
+
+  document
+    .querySelectorAll(".room")
+    .forEach(
+      function(item){
+
+        item.classList.remove(
+          "active"
+        );
+
+      }
+    );
+
+
+  element.classList.add(
+    "active"
+  );
+
+
+  const roomNames = {
+
+    sohbet:
+      "💬 Sohbet",
+
+    Cinsellik:
+      "🔥 Cinsellik",
+
+    şarkı:
+      "🎵 Şarkı",
+
+    oyun:
+      "🎮 Oyun",
+
+    yardım:
+      "🆘 Yardım"
+
+  };
+
+
+  document.getElementById(
+    "chatHeader"
+  ).textContent =
+    roomNames[room] || room;
+
+
+  if(currentUsername){
+
+    await supabaseClient
+      .from("online_users")
+      .upsert(
+        {
+          username:
+            currentUsername,
+
+          room:
+            currentRoom,
+
+          created_at:
+            new Date().toISOString()
+        },
+        {
+          onConflict:
+            "username"
+        }
+      );
+
+  }
+
+
+  await loadMessages();
+
+}
+
+
+
+/* =====================================
+   MESAJLARI YÜKLE
+===================================== */
+
+async function loadMessages(){
+
+  const messages =
+    document.getElementById(
+      "messages"
+    );
+
+
+  messages.innerHTML = "";
+
+
+  const result =
+    await supabaseClient
+      .from("messages")
+      .select("*")
+      .eq(
+        "room",
+        currentRoom
+      )
+      .order(
+        "created_at",
+        {
+          ascending: true
+        }
+      )
+      .limit(200);
+
+
+  if(result.error){
+
+    console.error(
+      result.error
+    );
+
+
+    messages.innerHTML = `
+
+      <div class="empty">
+        Mesajlar yüklenemedi.
+      </div>
+
+    `;
+
+    return;
+  }
+
+
+  if(!result.data ||
+     result.data.length === 0){
+
+    messages.innerHTML = `
+
+      <div class="empty">
+        Bu odada henüz mesaj yok.
+      </div>
+
+    `;
+
+    return;
+  }
+
+
+  result.data.forEach(
+    function(item){
+
+      addMessageToScreen(
+        item
+      );
+
+    }
+  );
+
+
+  messages.scrollTop =
+    messages.scrollHeight;
+
+}
+
+
+
+/* =====================================
+   MESAJI EKRANA EKLE
+===================================== */
+
+function addMessageToScreen(
+  data
+){
 
   const messages =
     document.getElementById(
@@ -505,7 +1038,7 @@ function sendMessage(){
     "name";
 
   name.textContent =
-    currentUsername;
+    data.username;
 
 
   const content =
@@ -514,15 +1047,50 @@ function sendMessage(){
     );
 
   content.textContent =
-    text;
+    data.message;
+
+
+  const time =
+    document.createElement(
+      "div"
+    );
+
+  time.className =
+    "time";
+
+
+  if(data.created_at){
+
+    const date =
+      new Date(
+        data.created_at
+      );
+
+
+    time.textContent =
+      date.toLocaleTimeString(
+        "tr-TR",
+        {
+          hour:"2-digit",
+          minute:"2-digit"
+        }
+      );
+
+  }
 
 
   message.appendChild(
     name
   );
 
+
   message.appendChild(
     content
+  );
+
+
+  message.appendChild(
+    time
   );
 
 
@@ -530,22 +1098,101 @@ function sendMessage(){
     message
   );
 
+}
+
+
+
+/* =====================================
+   MESAJ GÖNDER
+===================================== */
+
+async function sendMessage(){
+
+  const input =
+    document.getElementById(
+      "messageInput"
+    );
+
+
+  const text =
+    input.value.trim();
+
+
+  if(!text){
+
+    return;
+  }
+
+
+  if(!currentUsername){
+
+    alert(
+      "Önce sohbete giriş yap."
+    );
+
+    return;
+  }
+
+
+  input.disabled =
+    true;
+
+
+  const result =
+    await supabaseClient
+      .from("messages")
+      .insert(
+        {
+          username:
+            currentUsername,
+
+          message:
+            text,
+
+          room:
+            currentRoom
+        }
+      );
+
+
+  input.disabled =
+    false;
+
+
+  if(result.error){
+
+    console.error(
+      result.error
+    );
+
+
+    alert(
+      "Mesaj gönderilemedi."
+    );
+
+    return;
+  }
+
 
   input.value = "";
-
-  messages.scrollTop =
-    messages.scrollHeight;
 
 }
 
 
-/* =========================
+
+/* =====================================
    ENTER
-========================= */
+===================================== */
 
-function handleEnter(event){
+function handleEnter(
+  event
+){
 
-  if(event.key === "Enter"){
+  if(
+    event.key === "Enter"
+  ){
+
+    event.preventDefault();
 
     sendMessage();
 
@@ -554,13 +1201,148 @@ function handleEnter(event){
 }
 
 
-/* =========================
+
+/* =====================================
+   REALTIME
+===================================== */
+
+function subscribeRealtime(){
+
+  if(realtimeChannel){
+
+    supabaseClient
+      .removeChannel(
+        realtimeChannel
+      );
+
+  }
+
+
+  realtimeChannel =
+    supabaseClient
+      .channel(
+        "chat-realtime"
+      )
+
+
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages"
+        },
+        function(payload){
+
+          const newMessage =
+            payload.new;
+
+
+          if(
+            newMessage.room ===
+            currentRoom
+          ){
+
+            addMessageToScreen(
+              newMessage
+            );
+
+
+            const messages =
+              document.getElementById(
+                "messages"
+              );
+
+
+            messages.scrollTop =
+              messages.scrollHeight;
+
+          }
+
+        }
+      )
+
+
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "online_users"
+        },
+        function(){
+
+          loadOnlineUsers();
+
+        }
+      )
+
+
+      .subscribe();
+
+}
+
+
+
+/* =====================================
+   ÇIKIŞ
+===================================== */
+
+async function logout(){
+
+  if(currentUsername){
+
+    await supabaseClient
+      .from("online_users")
+      .delete()
+      .eq(
+        "username",
+        currentUsername
+      );
+
+  }
+
+
+  if(onlineInterval){
+
+    clearInterval(
+      onlineInterval
+    );
+
+  }
+
+
+  if(realtimeChannel){
+
+    await supabaseClient
+      .removeChannel(
+        realtimeChannel
+      );
+
+  }
+
+
+  localStorage.removeItem(
+    "username"
+  );
+
+
+  currentUsername = "";
+
+
+  location.reload();
+
+}
+
+
+
+/* =====================================
    SAYFA AÇILIŞ
-========================= */
+===================================== */
 
 window.addEventListener(
   "load",
-  function(){
+  async function(){
 
     const savedUsername =
       localStorage.getItem(
@@ -573,13 +1355,52 @@ window.addEventListener(
       currentUsername =
         savedUsername;
 
+
       document.getElementById(
         "loginArea"
       ).style.display = "none";
 
+
       document.getElementById(
         "chatArea"
       ).style.display = "block";
+
+
+      await joinOnline();
+
+
+      await loadMessages();
+
+
+      subscribeRealtime();
+
+
+      startOnlineSystem();
+
+    }
+
+  }
+);
+
+
+
+/* =====================================
+   SAYFA KAPANIRKEN
+===================================== */
+
+window.addEventListener(
+  "beforeunload",
+  function(){
+
+    if(currentUsername){
+
+      supabaseClient
+        .from("online_users")
+        .delete()
+        .eq(
+          "username",
+          currentUsername
+        );
 
     }
 
@@ -587,6 +1408,7 @@ window.addEventListener(
 );
 
 </script>
+
 
 </body>
 </html>
